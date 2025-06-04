@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import os
 import platform
 import sys
@@ -77,6 +78,7 @@ def test_analyze_wheel_abi(file, external_libs, exclude):
         with pytest.MonkeyPatch.context() as cp:
             if modify_ld_library_path:
                 cp.setenv(env_var, f"{HERE}")
+                importlib.reload(lddtree)
 
             winfo = analyze_wheel_abi(
                 Libc.GLIBC, Architecture.x86_64, HERE / file, exclude, False, True
@@ -85,6 +87,9 @@ def test_analyze_wheel_abi(file, external_libs, exclude):
                 set(winfo.external_refs["manylinux_2_5_x86_64"].libs) == external_libs
             ), f"{HERE}, {exclude}, {os.environ}"
             lddtree.parse_ld_so_conf.cache_clear()
+
+        if modify_ld_library_path:
+            importlib.reload(lddtree)
 
 
 def test_analyze_wheel_abi_pyfpe():
